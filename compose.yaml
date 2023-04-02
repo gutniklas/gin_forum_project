@@ -1,0 +1,36 @@
+# yaml 配置
+version: "3.9"
+
+services:
+  mysql5730:
+    image: "mysql:5.7.30"
+    ports:
+      - "13306:3306"
+    command: "--default-authentication-plugin=mysql_native_password --init-file /data/application/init.sql"
+    environment:
+      MYSQL_ROOT_PASSWORD: "root2334"
+      MYSQL_DATABASE: "gin_forum"
+      MYSQL_PASSWORD: "root2334"
+    volumes:
+      - ./sqlinit:/data/application
+  redis:
+    image: "redis:latest"
+    ports:
+      - "16379:6379"
+    volumes:
+      - ./redisinit:/data
+  gin_forum_vue3:
+    build: ./gin_forum_frontend
+    ports:
+      - "8089:8089"
+      - "80:80"
+    depends_on:
+      - gin_forum_app
+  gin_forum_app:
+    build: ./gin_forum_backend
+    command: sh -c "./wait-for-it.sh mysql5730:3306 -- ./gin_forum ./conf/config.yaml"
+    depends_on:
+      - mysql5730
+      - redis
+    ports:
+      - "8080:8080"
